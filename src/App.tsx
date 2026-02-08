@@ -30,18 +30,21 @@ import Analytics from './pages/Analytics'
 const authenticatorComponents = {
     SignIn: {
         Footer() {
-            const { toResetPassword } = useAuthenticator();
+            const { toResetPassword, toForgotPassword } = useAuthenticator() as any;
+
+            const handler = toForgotPassword || toResetPassword;
+
             return (
-                <View textAlign="center">
+                <View textAlign="center" >
                     <Button
                         fontWeight="normal"
-                        onClick={toResetPassword}
+                        onClick={handler}
                         size="small"
                         variation="link"
                     >
                         Forgot your password?
                     </Button>
-                </View>
+                </View >
             );
         },
     },
