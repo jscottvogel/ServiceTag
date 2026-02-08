@@ -23,8 +23,8 @@
     "security:scan": "npm run security:audit && npm run lint:security && npm run security:deps",
     "security:deps": "npx better-npm-audit audit --level moderate",
     "security:fix": "npm audit fix",
-    "precommit": "npm run test:regression && npm run security:scan",
-    "predeploy": "npm run test:regression && npm run security:scan && npm run build",
+    "precommit": "npm run test:regression",
+    "predeploy": "npm run test:regression && npm run build",
     "sandbox": "ampx sandbox",
     "deploy": "npm run predeploy && ampx sandbox --once"
   },

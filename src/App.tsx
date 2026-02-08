@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Authenticator } from '@aws-amplify/ui-react'
+import { Authenticator, View, Button, useAuthenticator } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
 import './App.css'
 
@@ -27,6 +27,26 @@ import Analytics from './pages/Analytics'
 /**
  * Main application component
  */
+const authenticatorComponents = {
+    SignIn: {
+        Footer() {
+            const { toResetPassword } = useAuthenticator();
+            return (
+                <View textAlign="center">
+                    <Button
+                        fontWeight="normal"
+                        onClick={toResetPassword}
+                        size="small"
+                        variation="link"
+                    >
+                        Forgot your password?
+                    </Button>
+                </View>
+            );
+        },
+    },
+};
+
 export default function App() {
     const [isLoading, setIsLoading] = useState<boolean>(true)
 
@@ -53,7 +73,7 @@ export default function App() {
                 <Route
                     path="/auth"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => (
                                 <Navigate to="/dashboard" replace />
                             )}
@@ -65,7 +85,7 @@ export default function App() {
                 <Route
                     path="/dashboard"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Dashboard />}
                         </Authenticator>
                     }
@@ -74,7 +94,7 @@ export default function App() {
                 <Route
                     path="/assets"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Assets />}
                         </Authenticator>
                     }
@@ -83,7 +103,7 @@ export default function App() {
                 <Route
                     path="/groups"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Groups />}
                         </Authenticator>
                     }
@@ -92,7 +112,7 @@ export default function App() {
                 <Route
                     path="/reminders"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Reminders />}
                         </Authenticator>
                     }
@@ -101,7 +121,7 @@ export default function App() {
                 <Route
                     path="/assets/:id"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <AssetDetails />}
                         </Authenticator>
                     }
@@ -110,7 +130,7 @@ export default function App() {
                 <Route
                     path="/maintenance"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Maintenance />}
                         </Authenticator>
                     }
@@ -119,7 +139,7 @@ export default function App() {
                 <Route
                     path="/schedule"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <MaintenanceSchedule />}
                         </Authenticator>
                     }
@@ -128,7 +148,7 @@ export default function App() {
                 <Route
                     path="/warranties"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Warranties />}
                         </Authenticator>
                     }
@@ -137,7 +157,7 @@ export default function App() {
                 <Route
                     path="/contracts"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Contracts />}
                         </Authenticator>
                     }
@@ -146,7 +166,7 @@ export default function App() {
                 <Route
                     path="/documents"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Documents />}
                         </Authenticator>
                     }
@@ -155,7 +175,7 @@ export default function App() {
                 <Route
                     path="/analytics"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Analytics />}
                         </Authenticator>
                     }
@@ -164,7 +184,7 @@ export default function App() {
                 <Route
                     path="/profile"
                     element={
-                        <Authenticator>
+                        <Authenticator components={authenticatorComponents}>
                             {() => <Profile />}
                         </Authenticator>
                     }
