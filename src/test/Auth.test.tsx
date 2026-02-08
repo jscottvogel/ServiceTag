@@ -21,7 +21,6 @@ vi.mock('@aws-amplify/ui-react', async () => {
             return <div data-testid="authenticator">{children}</div>
         },
         useAuthenticator: () => ({
-            toResetPassword: vi.fn(),
             toForgotPassword: vi.fn(),
             user: null,
             authStatus: 'unauthenticated'

@@ -30,9 +30,13 @@ import Analytics from './pages/Analytics'
 const authenticatorComponents = {
     SignIn: {
         Footer() {
-            const { toResetPassword, toForgotPassword } = useAuthenticator() as any;
+            const { toForgotPassword } = useAuthenticator((context) => [context.toForgotPassword]);
 
-            const handler = toForgotPassword || toResetPassword;
+            useEffect(() => {
+                console.log('toForgotPassword defined:', !!toForgotPassword);
+            }, [toForgotPassword]);
+
+            const handler = toForgotPassword;
 
             return (
                 <View textAlign="center" >
