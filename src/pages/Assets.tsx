@@ -172,7 +172,7 @@ export default function Assets() {
                 const base64String = reader.result as string
 
                 try {
-                    // @ts-ignore - analyzeAsset is a custom query added to schema
+                    // @ts-expect-error - analyzeAsset is a custom query added to schema
                     const response = await client.queries.analyzeAsset({
                         imageBase64: base64String
                     })
