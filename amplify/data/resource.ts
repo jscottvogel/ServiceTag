@@ -7,6 +7,7 @@
  */
 
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend'
+import { analyzeAsset } from '../functions/analyze-asset/resource'
 
 /**
  * Data schema definition
@@ -992,6 +993,14 @@ const schema = a.schema({
             allow.owner(),
             allow.authenticated().to(['read']),
         ]),
+
+    analyzeAsset: a.query()
+        .arguments({
+            imageBase64: a.string().required()
+        })
+        .returns(a.json())
+        .authorization(allow => [allow.authenticated()])
+        .handler(a.handler.function(analyzeAsset)),
 })
 
 export type Schema = ClientSchema<typeof schema>

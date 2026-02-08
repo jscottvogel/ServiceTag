@@ -2,7 +2,7 @@
  * @fileoverview Assets page - Manage all assets
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { generateClient } from 'aws-amplify/data'
 import type { Schema } from '../../amplify/data/resource'
@@ -17,7 +17,9 @@ export default function Assets() {
     const [loading, setLoading] = useState(true)
     const [showModal, setShowModal] = useState(false)
     const [seeding, setSeeding] = useState(false)
+    const [scanning, setScanning] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const [formData, setFormData] = useState({
         name: '',
         category: '',
@@ -25,7 +27,9 @@ export default function Assets() {
         model: '',
         purchaseDate: '',
         purchasePrice: '',
+        purchasePrice: '',
         inServiceDate: '',
+        notes: '',
     })
 
     useEffect(() => {
@@ -114,6 +118,7 @@ export default function Assets() {
                     purchaseDate: formData.purchaseDate || undefined,
                     purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined,
                     inServiceDate: formData.inServiceDate || undefined,
+                    notes: formData.notes,
                 })
             } else {
                 await client.models.Asset.create({
@@ -123,7 +128,9 @@ export default function Assets() {
                     model: formData.model,
                     purchaseDate: formData.purchaseDate || undefined,
                     purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined,
+                    purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined,
                     inServiceDate: formData.inServiceDate || undefined,
+                    notes: formData.notes,
                     status: 'active',
                 })
             }
@@ -137,10 +144,77 @@ export default function Assets() {
                 purchaseDate: '',
                 purchasePrice: '',
                 inServiceDate: '',
+                notes: '',
             })
             fetchAssets()
         } catch (error) {
             console.error('Error saving asset:', error)
+        }
+    }
+
+    const handleScanClick = () => {
+        fileInputRef.current?.click()
+    }
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > 4 * 1024 * 1024) {
+            alert('File size must be less than 4MB')
+            return
+        }
+
+        setScanning(true)
+        try {
+            const reader = new FileReader()
+            reader.onloadend = async () => {
+                const base64String = reader.result as string
+
+                try {
+                    // @ts-ignore - analyzeAsset is a custom query added to schema
+                    const response = await client.queries.analyzeAsset({
+                        imageBase64: base64String
+                    })
+
+                    const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data
+
+                    if (data) {
+                        setFormData(prev => ({
+                            ...prev,
+                            manufacturer: data.manufacturer || prev.manufacturer,
+                            model: data.model || prev.model,
+                            // If user is editing, we might overwrite, but usually scan is for new
+                            // We can also populate name intelligently
+                            name: data.manufacturer && data.model ? `${data.manufacturer} ${data.model}` : prev.name,
+                            category: data.category || prev.category,
+                            notes: (prev.notes || '') + (prev.notes ? '\n\n' : '') +
+                                (data.manualUrl ? `Manual: ${data.manualUrl}\n` : '') +
+                                (data.maintenanceTasks ? `Maintenance Schedule:\n${data.maintenanceTasks.map((t: any) => `- ${t.taskName} (${t.frequency}): ${t.description}`).join('\n')}` : '') +
+                                (data.warrantyInfo ? `\nWarranty: ${data.warrantyInfo}` : '')
+                        }))
+
+                        if (data.maintenanceTasks && data.maintenanceTasks.length > 0) {
+                            alert(`Found ${data.maintenanceTasks.length} maintenance tasks! Added to Notes field.`)
+                        }
+
+                        if (data.manualUrl) {
+                            console.log('Manual URL found:', data.manualUrl)
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error analyzing image:', err)
+                    alert('Failed to analyze image. Please try again.')
+                } finally {
+                    setScanning(false)
+                    // Reset file input
+                    if (fileInputRef.current) fileInputRef.current.value = ''
+                }
+            }
+            reader.readAsDataURL(file)
+        } catch (error) {
+            console.error('Error reading file:', error)
+            setScanning(false)
         }
     }
 
@@ -309,6 +383,43 @@ export default function Assets() {
                                     ✕
                                 </button>
                             </div>
+
+                            {/* Hidden file input for scanning */}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/*"
+                                capture="environment" // Prefer rear camera on mobile
+                                style={{ display: 'none' }}
+                            />
+
+                            {!editingId && (
+                                <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={handleScanClick}
+                                        disabled={scanning}
+                                        style={{ width: '100%', justifyContent: 'center', padding: '1rem', border: '2px dashed var(--border-color)' }}
+                                    >
+                                        {scanning ? (
+                                            <>
+                                                <span className="spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></span>
+                                                Analyzing Image...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>📸</span> Scan Asset (Photo/QR)
+                                            </>
+                                        )}
+                                    </button>
+                                    <small style={{ display: 'block', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                                        Auto-fills details using AI
+                                    </small>
+                                </div>
+                            )}
+
                             <form onSubmit={handleSaveAsset} className="modal-body">
                                 <div className="form-group">
                                     <label htmlFor="name">Asset Name *</label>
@@ -394,6 +505,18 @@ export default function Assets() {
                                     <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
                                         When the asset was put into service (used for contract maintenance schedules)
                                     </small>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="notes">Notes & AI Findings</label>
+                                    <textarea
+                                        id="notes"
+                                        className="input"
+                                        value={formData.notes || ''}
+                                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                        placeholder="Add any notes here..."
+                                        rows={5}
+                                        style={{ fontFamily: 'monospace', fontSize: '0.9em' }}
+                                    />
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
