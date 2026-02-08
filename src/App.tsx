@@ -30,9 +30,9 @@ import Analytics from './pages/Analytics'
 const authenticatorComponents = {
     SignIn: {
         Footer() {
-            const { toForgotPassword } = useAuthenticator((context) => [context.toForgotPassword]);
+            const { toForgotPassword } = useAuthenticator();
 
-            const handler = (e: any) => {
+            const handler = (e: React.MouseEvent<HTMLButtonElement>) => {
                 e.preventDefault();
                 toForgotPassword();
             };
