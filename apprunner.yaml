@@ -1,0 +1,20 @@
+version: 1.0
+runtime: nodejs18
+build:
+  commands:
+    pre-build:
+      - npm install
+    build:
+      - npm run build
+  env:
+    variables:
+      NODE_ENV: production
+
+run:
+  runtime-version: 18
+  command: npx serve -s dist -l 8080
+  network:
+    port: 8080
+  env:
+    - name: PORT
+      value: "8080"

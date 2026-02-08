@@ -1,0 +1,103 @@
+/**
+ * Maintenance Page Styles
+ */
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.task-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-lg);
+}
+
+.task-header h3 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-xs) 0;
+}
+
+.task-asset {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.task-badges {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.task-description {
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.task-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.task-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.task-actions {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.modal-large {
+    max-width: 700px;
+}
+
+textarea.input {
+    resize: vertical;
+    min-height: 80px;
+    font-family: var(--font-sans);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .task-header {
+        flex-direction: column;
+    }
+
+    .task-badges {
+        width: 100%;
+    }
+
+    .task-details {
+        grid-template-columns: 1fr;
+    }
+
+    .task-actions {
+        flex-direction: column;
+    }
+
+    .task-actions .btn {
+        width: 100%;
+    }
+}

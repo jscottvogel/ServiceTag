@@ -1,0 +1,110 @@
+/**
+ * Warranties Page Styles
+ */
+
+.warranties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: var(--space-lg);
+}
+
+.warranty-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.warranty-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-md);
+}
+
+.warranty-header h3 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+}
+
+.warranty-provider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+}
+
+.provider-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.provider-name {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.warranty-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.warranty-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.warranty-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+}
+
+.warranty-actions {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning) 0%, var(--warning-light) 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .warranties-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .warranty-header {
+        flex-direction: column;
+    }
+
+    .warranty-actions {
+        flex-direction: column;
+    }
+
+    .warranty-actions .btn {
+        width: 100%;
+    }
+}
