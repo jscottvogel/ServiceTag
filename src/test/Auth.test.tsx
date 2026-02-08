@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { useAuthenticator } from '@aws-amplify/ui-react'
 import App from '../App'
 
 // Mock Amplify UI components
@@ -20,11 +21,11 @@ vi.mock('@aws-amplify/ui-react', async () => {
             }
             return <div data-testid="authenticator">{children}</div>
         },
-        useAuthenticator: () => ({
+        useAuthenticator: vi.fn(() => ({
             toForgotPassword: vi.fn(),
             user: null,
             authStatus: 'unauthenticated'
-        })
+        }))
     }
 })
 
@@ -43,6 +44,25 @@ describe('Authentication Flow', () => {
 
             // Check for "Forgot your password?" button
             expect(screen.getByText('Forgot your password?')).toBeInTheDocument()
+        })
+    })
+    it('calls toForgotPassword when the link is clicked', async () => {
+        const toForgotPasswordMock = vi.fn()
+
+        // Override the mock for this test
+        vi.mocked(useAuthenticator).mockReturnValue({
+            toForgotPassword: toForgotPasswordMock,
+            user: null,
+            authStatus: 'unauthenticated'
+        } as any)
+
+        window.history.pushState({}, 'Auth', '/auth')
+        render(<App />)
+
+        await waitFor(() => {
+            const button = screen.getByText('Forgot your password?')
+            fireEvent.click(button)
+            expect(toForgotPasswordMock).toHaveBeenCalled()
         })
     })
 })

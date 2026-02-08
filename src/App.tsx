@@ -32,15 +32,15 @@ const authenticatorComponents = {
         Footer() {
             const { toForgotPassword } = useAuthenticator((context) => [context.toForgotPassword]);
 
-            useEffect(() => {
-                console.log('toForgotPassword defined:', !!toForgotPassword);
-            }, [toForgotPassword]);
-
-            const handler = toForgotPassword;
+            const handler = (e: any) => {
+                e.preventDefault();
+                toForgotPassword();
+            };
 
             return (
                 <View textAlign="center" >
                     <Button
+                        type="button"
                         fontWeight="normal"
                         onClick={handler}
                         size="small"
