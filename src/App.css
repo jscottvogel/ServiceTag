@@ -5,26 +5,7 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: var(--color-bg-primary);
-}
-
-/* Amplify UI Customization */
-[data-amplify-authenticator] {
-    --amplify-colors-background-primary: var(--color-bg-primary);
-    --amplify-colors-background-secondary: var(--color-bg-secondary);
-    --amplify-colors-brand-primary-10: var(--color-primary);
-    --amplify-colors-brand-primary-80: var(--color-primary-dark);
-    --amplify-colors-brand-primary-90: var(--color-primary-light);
-    --amplify-colors-font-primary: var(--color-text-primary);
-    --amplify-colors-font-secondary: var(--color-text-secondary);
-    --amplify-radii-small: var(--radius-sm);
-    --amplify-radii-medium: var(--radius-md);
-    --amplify-radii-large: var(--radius-lg);
-}
-
-[data-amplify-authenticator] [data-amplify-container] {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
+    background: #ffffff;
+    /* Fallback */
+    background: var(--bg-primary, #ffffff);
 }

@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { generateClient } from 'aws-amplify/data'
 import type { Schema } from '../../amplify/data/resource'
 import Layout from '../components/Layout'
@@ -212,7 +213,7 @@ export default function Groups() {
                                         <span className="stat-pill">Unknown Assets</span>
                                     </div>
                                     <div className="group-actions">
-                                        <button className="btn btn-secondary btn-sm">View</button>
+                                        <Link to={`/groups/${group.id}`} className="btn btn-secondary btn-sm">View</Link>
                                         <button
                                             className="btn btn-ghost btn-sm"
                                             onClick={() => handleEditGroup(group)}

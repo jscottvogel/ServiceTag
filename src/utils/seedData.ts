@@ -1,3 +1,4 @@
+
 import type { Schema } from '../../amplify/data/resource'
 import { V6Client } from '@aws-amplify/api-graphql'
 
@@ -5,262 +6,587 @@ export const seedDatabase = async (client: V6Client<Schema>) => {
     console.log('🌱 Starting database seed...')
 
     try {
-        // 1. Create Asset Groups
+        // --- 1. Create Asset Groups ---
         console.log('Creating groups...')
-        // Create Home Group (unused var removed)
-        await client.models.AssetGroup.create({
+
+        // Location Groups
+        const homeGroup = await client.models.AssetGroup.create({
             name: 'Home',
-            description: 'Main residence and associated items',
-            groupType: 'location'
+            description: 'Main Residence',
+            groupType: 'location',
+            icon: 'home'
         })
 
         const garageGroup = await client.models.AssetGroup.create({
             name: 'Garage',
-            description: 'Vehicles and tools',
-            groupType: 'location'
+            description: 'Vehicles and Tools',
+            groupType: 'location',
+            icon: 'warehouse',
+            parentGroupId: homeGroup.data?.id
         })
 
-        // Create Office Group (unused var removed)
-        await client.models.AssetGroup.create({
-            name: 'Home Office',
-            description: 'Computers and electronics',
-            groupType: 'location'
+        const kitchenGroup = await client.models.AssetGroup.create({
+            name: 'Kitchen',
+            description: 'Appliances and Fixtures',
+            groupType: 'location',
+            icon: 'kitchen',
+            parentGroupId: homeGroup.data?.id
         })
 
-        // 2. Create Assets
-        console.error('Creating assets (forcing log)...')
+        const backyardGroup = await client.models.AssetGroup.create({
+            name: 'Backyard & Pool',
+            description: 'Outdoor Equipment',
+            groupType: 'location',
+            icon: 'pool',
+            parentGroupId: homeGroup.data?.id
+        })
+
+        // Category Groups (New)
+        const vehiclesGroup = await client.models.AssetGroup.create({
+            name: 'Vehicles',
+            description: 'All Cars and Trucks',
+            groupType: 'category',
+            icon: 'car'
+        })
+
+        const appliancesGroup = await client.models.AssetGroup.create({
+            name: 'Appliances',
+            description: 'Major and Small Appliances',
+            groupType: 'category',
+            icon: 'blender'
+        })
+
+
+        // --- 2. Create Assets ---
+        console.log('Creating assets...')
+
+        // -- Vehicle: Tesla Model Y --
         const tesla = await client.models.Asset.create({
             name: 'Tesla Model Y',
             category: 'Vehicle',
             status: 'active',
             manufacturer: 'Tesla',
-            model: 'Model Y'
+            model: 'Model Y',
+            serialNumber: '5YJYY...',
+            purchaseDate: '2023-06-15',
+            purchasePrice: 52990.00,
+            currentMileage: 12500,
+            location: 'Garage'
         })
-        console.error('Tesla created response:', JSON.stringify(tesla));
+        const teslaId = tesla.data!.id
 
-        if (!tesla.data?.id) {
-            console.error('FATAL: Tesla ID is missing!');
-            throw new Error('Tesla ID missing');
+        if (garageGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: teslaId,
+                groupId: garageGroup.data.id,
+                isPrimary: true
+            })
         }
-        const teslaId = tesla.data.id;
-        console.error('Tesla ID verified:', teslaId);
-
-        if (tesla.data && garageGroup.data) {
-            console.error('Creating Tesla group membership...');
-            try {
-                const membership = await client.models.AssetGroupMembership.create({
-                    assetId: teslaId,
-                    groupId: (garageGroup.data as any).id,
-                    isPrimary: true
-                });
-                console.error('Membership created:', membership);
-            } catch (e) {
-                console.error('Failed to create membership:', e);
-            }
+        if (vehiclesGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: teslaId,
+                groupId: vehiclesGroup.data.id,
+                isPrimary: false
+            })
         }
 
+        // -- Vehicle: Toyota Camry (Second Car) --
+        const camry = await client.models.Asset.create({
+            name: 'Toyota Camry Hybrid',
+            category: 'Vehicle',
+            status: 'active',
+            manufacturer: 'Toyota',
+            model: 'Camry XLE',
+            serialNumber: '4T1B...',
+            purchaseDate: '2023-01-10',
+            purchasePrice: 35000.00,
+            currentMileage: 28500,
+            location: 'Garage'
+        })
+        const camryId = camry.data!.id
 
-        // Placeholders for disabled assets (commented out to avoid unused vars)
-        // const fridge = { data: null }
-        // const macbook = { data: null }
-        // const hvac = { data: null }
+        if (garageGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: camryId,
+                groupId: garageGroup.data.id,
+                isPrimary: true
+            })
+        }
+        if (vehiclesGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: camryId,
+                groupId: vehiclesGroup.data.id,
+                isPrimary: false
+            })
+        }
 
-        // 3. Create Maintenance Tasks
-        console.error('Creating maintenance tasks...')
+        // -- House: Main Residence --
+        const house = await client.models.Asset.create({
+            name: '123 Maple Street',
+            category: 'Real Estate',
+            status: 'active',
+            purchaseDate: '2018-04-20',
+            purchasePrice: 450000.00,
+            location: 'Home'
+        })
+        const houseId = house.data!.id
+
+        // -- Asset: HVAC System --
+        const hvac = await client.models.Asset.create({
+            name: 'Central HVAC System',
+            category: 'Mechanical',
+            manufacturer: 'Trane',
+            model: 'XR14',
+            serialNumber: 'TRN-2018...',
+            purchaseDate: '2018-04-20',
+            status: 'active',
+            location: 'Home'
+        })
+        const hvacId = hvac.data!.id
+
+        if (homeGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: hvacId,
+                groupId: homeGroup.data.id,
+                isPrimary: true
+            })
+        }
+
+        // -- Appliance: Samsung Refrigerator --
+        const fridge = await client.models.Asset.create({
+            name: 'Smart Refrigerator',
+            category: 'Appliance',
+            manufacturer: 'Samsung',
+            model: 'RF28...',
+            serialNumber: 'SAMS123...',
+            purchaseDate: '2022-11-25',
+            purchasePrice: 2199.00,
+            status: 'active',
+            location: 'Kitchen'
+        })
+        const fridgeId = fridge.data!.id
+
+        if (kitchenGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: fridgeId,
+                groupId: kitchenGroup.data.id,
+                isPrimary: true
+            })
+        }
+        if (appliancesGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: fridgeId,
+                groupId: appliancesGroup.data.id,
+                isPrimary: false
+            })
+        }
+
+        // -- Small Appliance: Espresso Machine --
+        const espresso = await client.models.Asset.create({
+            name: 'Barista Express',
+            category: 'Small Appliance',
+            manufacturer: 'Breville',
+            model: 'BES870XL',
+            purchaseDate: '2023-12-25',
+            purchasePrice: 699.95,
+            status: 'active',
+            location: 'Kitchen'
+        })
+        const espressoId = espresso.data!.id
+
+        if (kitchenGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: espressoId,
+                groupId: kitchenGroup.data.id,
+                isPrimary: true
+            })
+        }
+        if (appliancesGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: espressoId,
+                groupId: appliancesGroup.data.id,
+                isPrimary: false
+            })
+        }
+
+        // -- Small Appliance: Blender --
+        const blender = await client.models.Asset.create({
+            name: 'Professional Blender',
+            category: 'Small Appliance',
+            manufacturer: 'Vitamix',
+            model: '5200',
+            purchaseDate: '2020-08-15',
+            purchasePrice: 399.00,
+            status: 'active',
+            location: 'Kitchen'
+        })
+        const blenderId = blender.data!.id
+
+        if (kitchenGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: blenderId,
+                groupId: kitchenGroup.data.id,
+                isPrimary: true
+            })
+        }
+        if (appliancesGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: blenderId,
+                groupId: appliancesGroup.data.id,
+                isPrimary: false
+            })
+        }
+
+        // -- Pool: Hayward Pump --
+        const poolPump = await client.models.Asset.create({
+            name: 'Variable Speed Pool Pump',
+            category: 'Pool Equipment',
+            manufacturer: 'Hayward',
+            model: 'TriStar VS',
+            serialNumber: 'HWD987...',
+            purchaseDate: '2021-05-10',
+            purchasePrice: 1200.00,
+            status: 'active',
+            location: 'Backyard'
+        })
+        const pumpId = poolPump.data!.id
+
+        if (backyardGroup.data) {
+            await client.models.AssetGroupMembership.create({
+                assetId: pumpId,
+                groupId: backyardGroup.data.id,
+                isPrimary: true
+            })
+        }
+
+        // --- 3. Create Maintenance Tasks ---
+        console.log('Creating maintenance tasks...')
 
         // Tesla Tasks
-        try {
-            console.error('Creating Task 1 (Tire Rotation) for Asset ID:', teslaId);
-            const task1 = await client.models.MaintenanceTask.create({
-                taskName: 'Tire Rotation',
-                description: 'Rotate tires every 6,250 miles',
-                assetId: teslaId,
-                priority: 'medium',
-                intervalType: 'usage',
-                intervalMiles: 6250,
-                estimatedCost: 50.00,
-                isActive: true,
-                isOverdue: false,
-                nextDueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString().split('T')[0],
-            })
-            console.error('Task 1 created result:', JSON.stringify(task1));
-        } catch (error) {
-            console.error('Failed to create Task 1:', error);
-        }
-
-        try {
-            console.log('Creating Task 2 (Cabin Air Filter)...');
-            await client.models.MaintenanceTask.create({
-                taskName: 'Cabin Air Filter',
-                description: 'Replace HEPA filter',
-                assetId: teslaId, // Use verified teslaId instead of unsafe assertion
-                priority: 'low',
-                intervalType: 'time',
-                intervalDays: 730, // 2 years
-                estimatedCost: 120.00,
-                isActive: true,
-                isOverdue: true,
-                nextDueDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString().split('T')[0], // Overdue by 5 days
-            })
-            console.log('Task 2 created');
-        } catch (error) {
-            console.error('Failed to create Task 2:', error);
-        }
-
-        // Fridge Tasks (disabled)
-        /*
         await client.models.MaintenanceTask.create({
-            taskName: 'Replace Water Filter',
-            description: 'Replace HAF-QIN filter',
-            assetId: (fridge.data as any)?.id!,
+            taskName: 'Rotate Tires',
+            description: 'Rotate tires every 6,250 miles',
+            assetId: teslaId,
+            priority: 'medium',
+            intervalType: 'usage',
+            intervalMiles: 6250,
+            nextDueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString().split('T')[0], // Due soon
+            isActive: true
+        })
+
+        await client.models.MaintenanceTask.create({
+            taskName: 'Replace Cabin Air Filter',
+            description: 'HEPA filter replacement',
+            assetId: teslaId,
+            priority: 'low',
+            intervalType: 'time',
+            intervalDays: 730,
+            nextDueDate: '2025-06-15',
+            isActive: true
+        })
+
+        // Camry Tasks (30k, 60k, 90k)
+        await client.models.MaintenanceTask.create({
+            taskName: '30,000 Mile Service',
+            description: 'Major service: Oil change, tire rotation, cabin air filter, engine air filter, brake fluid check',
+            assetId: camryId,
+            priority: 'high',
+            intervalType: 'usage',
+            intervalMiles: 30000,
+            nextDueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 60).toISOString().split('T')[0], // Estimated date
+            isActive: true
+        })
+
+        await client.models.MaintenanceTask.create({
+            taskName: '60,000 Mile Service',
+            description: 'Major service: All 30k items + transmission fluid check, coolant check, drive belt inspection',
+            assetId: camryId,
+            priority: 'high',
+            intervalType: 'usage',
+            intervalMiles: 60000,
+            isActive: true
+        })
+
+        await client.models.MaintenanceTask.create({
+            taskName: '90,000 Mile Service',
+            description: 'Major service: All 30k items + spark plugs (if iridium/platinum), comprehensive inspection',
+            assetId: camryId,
+            priority: 'high',
+            intervalType: 'usage',
+            intervalMiles: 90000,
+            isActive: true
+        })
+
+        // HVAC Tasks (Spring/Fall Checkups)
+        const springCheckup = await client.models.MaintenanceTask.create({
+            taskName: 'Spring HVAC Tune-up',
+            description: 'Prepare AC for summer. Check refrigerant, clean coils, test capacitor.',
+            assetId: hvacId,
+            priority: 'medium',
+            intervalType: 'time',
+            intervalDays: 365,
+            nextDueDate: '2024-04-15',
+            isActive: true,
+            intervalNotes: 'Required by service contract'
+        })
+
+        const fallCheckup = await client.models.MaintenanceTask.create({
+            taskName: 'Fall Furnace Tune-up',
+            description: 'Prepare furnace for winter. Inspect burner, heat exchanger, and safety controls.',
+            assetId: hvacId,
+            priority: 'medium',
+            intervalType: 'time',
+            intervalDays: 365,
+            nextDueDate: '2024-10-15',
+            isActive: true,
+            intervalNotes: 'Required by service contract'
+        })
+
+        await client.models.MaintenanceTask.create({
+            taskName: 'Replace Air Filter',
+            description: 'Replace 20x25x1 filters',
+            assetId: hvacId,
+            priority: 'high',
+            intervalType: 'time',
+            intervalDays: 90,
+            nextDueDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString().split('T')[0], // Overdue
+            isOverdue: true,
+            isActive: true
+        })
+
+        // House General
+        await client.models.MaintenanceTask.create({
+            taskName: 'Clean Gutters',
+            description: 'Clear leaves and debris',
+            assetId: houseId,
             priority: 'medium',
             intervalType: 'time',
             intervalDays: 180,
-            estimatedCost: 45.00,
-            isActive: true,
-            nextDueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45).toISOString(), // Due in 45 days
+            nextDueDate: '2024-11-01',
+            isActive: true
         })
-        */
 
-        // HVAC Tasks
-        // HVAC Tasks (disabled)
-        // const hvacSpringTask = { data: null }
-        /*
-        const hvacSpringTask = await client.models.MaintenanceTask.create({ ... })
-        await client.models.MaintenanceTask.create({ ... })
-        await client.models.MaintenanceTask.create({ ... })
-        */
-
-        // Tesla additional tasks
+        // Fridge Tasks
         await client.models.MaintenanceTask.create({
-            taskName: 'Brake Fluid Check',
-            description: 'Check and replace brake fluid if needed',
-            assetId: teslaId, // Use verified teslaId instead of unsafe assertion
+            taskName: 'Replace Water Filter',
+            description: 'Samsung HAF-QIN filter',
+            assetId: fridgeId,
             priority: 'medium',
             intervalType: 'time',
-            intervalDays: 730, // 2 years
-            estimatedCost: 80.00,
-            isActive: true,
-            nextDueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 75).toISOString().split('T')[0], // Due in 75 days
+            intervalDays: 180,
+            nextDueDate: '2024-05-25',
+            isActive: true
         })
 
-        // Fridge additional tasks disabled
-        /*
-        await client.models.MaintenanceTask.create({ ... })
-        */
+        // Espresso Tasks
+        await client.models.MaintenanceTask.create({
+            taskName: 'Descaling Cycle',
+            description: 'Run descaling solution through machine',
+            assetId: espressoId,
+            priority: 'medium',
+            intervalType: 'time',
+            intervalDays: 90,
+            nextDueDate: '2024-03-25',
+            isActive: true
+        })
 
-        // 4. Create Warranties
+        // Pool Tasks
+        await client.models.MaintenanceTask.create({
+            taskName: 'Clean Pump Basket',
+            description: 'Remove debris from pump basket',
+            assetId: pumpId,
+            priority: 'medium',
+            intervalType: 'time',
+            intervalDays: 7,
+            nextDueDate: new Date().toISOString().split('T')[0], // Due today
+            isActive: true
+        })
+
+        await client.models.MaintenanceTask.create({
+            taskName: 'Backwash Filter',
+            description: 'Clean sand filter',
+            assetId: pumpId,
+            priority: 'medium',
+            intervalType: 'usage',
+            intervalNotes: 'When pressure rises 10psi',
+            isActive: true
+        })
+
+
+        // --- 4. Create Warranties ---
         console.log('Creating warranties...')
 
         // Tesla Warranty
         await client.models.Warranty.create({
-            warrantyName: 'Basic Vehicle Limited Warranty',
+            warrantyName: 'Tesla New Vehicle Limited Warranty',
             warrantyType: 'manufacturer',
             provider: 'Tesla',
-            assetId: teslaId, // Use verified teslaId
+            assetId: teslaId,
             startDate: '2023-06-15',
-            endDate: '2027-06-15', // 4 years
+            endDate: '2027-06-15',
             isActive: true,
-            registrationStatus: 'registered',
-            coverageScope: 'Bumper to bumper coverage'
+            coverageScope: 'Bumper-to-bumper'
         })
 
-        // Other Warranties disabled
-        /*
-        await client.models.Warranty.create(...)
-        */
+        // Camry Warranty
+        await client.models.Warranty.create({
+            warrantyName: 'Toyota Powertrain Warranty',
+            warrantyType: 'manufacturer',
+            provider: 'Toyota',
+            assetId: camryId,
+            startDate: '2023-01-10',
+            endDate: '2028-01-10', // 5 years usually, but user asked for 100k miles emphasis
+            isActive: true,
+            coverageScope: 'Engine, transmission, transaxle, front-wheel-drive system, rear-wheel-drive. Limit: 100,000 miles.'
+        })
 
-        // 5. Create Service Contracts
-        console.log('Creating contracts...')
+        await client.models.Warranty.create({
+            warrantyName: 'Toyota Hybrid Battery Warranty',
+            warrantyType: 'manufacturer',
+            provider: 'Toyota',
+            assetId: camryId,
+            startDate: '2023-01-10',
+            endDate: '2033-01-10', // 10 years
+            isActive: true,
+            coverageScope: 'Hybrid battery control module, hybrid control module, inverter with converter. Limit: 150,000 miles.'
+        })
 
-        // Contracts disabled
-        // const hvacContract = { data: null }
-        /*
-        const hvacContract = await client.models.ServiceContract.create(...)
-        */
 
-        // Create Contract Requirement linking Spring Tune-up to HVAC contract (commented out)
-        /*
-        if (false && hvacContract.data && hvacSpringTask.data) {
+        // Fridge Warranty
+        await client.models.Warranty.create({
+            warrantyName: 'Samsung Manufacturer Warranty',
+            warrantyType: 'manufacturer',
+            provider: 'Samsung',
+            assetId: fridgeId,
+            startDate: '2022-11-25',
+            endDate: '2023-11-25',
+            isActive: false, // Expired
+            coverageScope: 'Parts and labor'
+        })
+
+        // Fridge Compressor Warranty (10 years)
+        await client.models.Warranty.create({
+            warrantyName: 'Digital Inverter Compressor Warranty',
+            warrantyType: 'manufacturer',
+            provider: 'Samsung',
+            assetId: fridgeId,
+            startDate: '2022-11-25',
+            endDate: '2032-11-25',
+            isActive: true,
+            coverageScope: 'Digital Inverter Compressor part only'
+        })
+
+        // Pool Pump Warranty
+        await client.models.Warranty.create({
+            warrantyName: 'Hayward Expert Line Warranty',
+            warrantyType: 'manufacturer',
+            provider: 'Hayward',
+            assetId: pumpId,
+            startDate: '2021-05-10',
+            endDate: '2024-05-10',
+            isActive: true,
+            coverageScope: 'Full unit replacement'
+        })
+
+
+        // --- 5. Create Service Contracts ---
+        console.log('Creating service contracts...')
+
+        // HVAC Service Contract
+        const hvacContract = await client.models.ServiceContract.create({
+            contractName: 'HVAC Comfort Club',
+            contractType: 'maintenance_plan',
+            provider: 'Climate Control Experts',
+            contractNumber: 'CCE-2024-88',
+            assetId: hvacId,
+            startDate: '2024-01-01',
+            endDate: '2024-12-31',
+            isActive: true,
+            annualCost: 189.00,
+            autoRenew: true,
+            coverageScope: 'Includes 2 seasonal tune-ups (Spring/Fall). Priority scheduling.',
+            notes: '20% discount on all repair labor.'
+        })
+
+        // Link HVAC tasks to contract if schema allows (ContractRequirement)
+        if (springCheckup.data && hvacContract.data) {
             await client.models.ContractRequirement.create({
-                contractId: (hvacContract.data as any).id,
-                maintenanceTaskId: (hvacSpringTask.data as any).id,
+                contractId: hvacContract.data.id,
+                maintenanceTaskId: springCheckup.data.id,
                 isRequired: true,
-                requirementDescription: 'Annual spring tune-up required by maintenance plan',
-                consequenceIfMissed: 'Contract may be voided and warranty claims denied',
-                isCompliant: false, // Task is overdue
-                isOverdue: true,
-                daysUntilDue: -10,
+                requirementDescription: 'Spring Tune-up (Included in plan)'
             })
         }
-        */
+        if (fallCheckup.data && hvacContract.data) {
+            await client.models.ContractRequirement.create({
+                contractId: hvacContract.data.id,
+                maintenanceTaskId: fallCheckup.data.id,
+                isRequired: true,
+                requirementDescription: 'Fall Tune-up (Included in plan)'
+            })
+        }
 
-        // Tesla Extended Warranty
+        // Home Warranty (Covers house, appliances, pool)
         await client.models.ServiceContract.create({
-            contractName: 'Tesla Extended Service Agreement',
+            contractName: 'Total Home Protection',
+            contractType: 'home_warranty',
+            provider: 'American Home Shield',
+            contractNumber: 'AHS-998877',
+            assetId: houseId, // Linked to house, but covers others implicitly or explicitly
+            startDate: '2024-01-01',
+            endDate: '2025-01-01',
+            isActive: true,
+            annualCost: 650.00,
+            deductible: 75.00,
+            coverageScope: 'HVAC, Plumbing, Electrical, Appliances (Fridge, Oven, Dishwasher)',
+            notes: 'Call 1-800-XXX-XXXX for service'
+        })
+
+        // Tesla Extended Service
+        await client.models.ServiceContract.create({
+            contractName: 'Tesla ESA',
             contractType: 'extended_warranty',
             provider: 'Tesla',
-            contractNumber: 'TSL-ESA-123456',
-            assetId: teslaId, // Use verified teslaId
-            startDate: '2027-06-15',
-            endDate: '2031-06-15',
-            isActive: true,
-            annualCost: 2500.00,
-            autoRenew: false,
-            coverageScope: 'Extends coverage beyond basic warranty. Covers battery, drive unit, and all major components. Does not cover tire wear or cosmetic damage.',
+            assetId: teslaId,
+            startDate: '2027-06-16',
+            endDate: '2029-06-15',
+            isActive: false, // Future
+            annualCost: 2000.00,
+            coverageScope: 'Extension of Basic Vehicle Warranty'
         })
 
-        // Home Appliance Protection Plan
-        // Home Appliance Protection Plan (disabled)
-        /*
-        await client.models.ServiceContract.create({
-           ...
-        })
-        */
-
-        // AppleCare+ and Old HVAC (disabled)
-        /*
-        await client.models.ServiceContract.create({...})
-        await client.models.ServiceContract.create({...})
-        */
-
-        // Expiring Soon Contract
+        // AAA Subscription
         const expiringDate = new Date()
-        expiringDate.setDate(expiringDate.getDate() + 25) // Expires in 25 days
+        expiringDate.setDate(expiringDate.getDate() + 25)
 
         await client.models.ServiceContract.create({
             contractName: 'Vehicle Roadside Assistance',
             contractType: 'subscription',
             provider: 'AAA Premium',
             contractNumber: 'AAA-2024-12345',
-            assetId: teslaId, // Use verified teslaId
+            assetId: teslaId,
             startDate: '2024-02-07',
             endDate: expiringDate.toISOString().split('T')[0],
             isActive: true,
             monthlyPayment: 12.99,
             annualCost: 155.88,
             autoRenew: false,
-            coverageScope: 'Towing up to 100 miles, battery service, flat tire service, lockout service, fuel delivery',
+            coverageScope: 'Towing, battery, flat tire'
         })
 
-        // 6. Create Documents
+        // --- 6. Create Documents ---
         console.log('Creating documents...')
         await client.models.Document.create({
             title: 'Tesla Model Y Owner\'s Manual',
             documentType: 'manual',
-            assetId: teslaId, // Use verified teslaId
+            assetId: teslaId,
             fileUrl: 'https://www.tesla.com/ownersmanual/modely/en_us/',
             description: 'Digital owner\'s manual',
             uploadDate: new Date().toISOString()
         })
 
-        // Fridge Receipt (disabled)
-        /*
-        await client.models.Document.create({...})
-        */
-
         console.log('✅ Database seeded successfully!')
-        return { success: true, count: 'Created sample data for Assets, Groups, Tasks, Warranties, and Contracts.' }
+        return { success: true, count: 'Created comprehensive sample data.' }
     } catch (error) {
         console.error('❌ Error seeding database:', error)
         throw error
@@ -282,7 +608,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.Document.delete({ id: doc.id })
             totalDeleted++
         }
-        console.log(`Deleted ${documents.data.length} documents`)
 
         // 2. Delete Service Records
         console.log('Deleting service records...')
@@ -291,7 +616,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.ServiceRecord.delete({ id: record.id })
             totalDeleted++
         }
-        console.log(`Deleted ${serviceRecords.data.length} service records`)
 
         // 3. Delete Maintenance Tasks
         console.log('Deleting maintenance tasks...')
@@ -300,7 +624,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.MaintenanceTask.delete({ id: task.id })
             totalDeleted++
         }
-        console.log(`Deleted ${tasks.data.length} maintenance tasks`)
 
         // 4. Delete Warranty Claims
         console.log('Deleting warranty claims...')
@@ -309,7 +632,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.WarrantyClaim.delete({ id: claim.id })
             totalDeleted++
         }
-        console.log(`Deleted ${claims.data.length} warranty claims`)
 
         // 5. Delete Warranty Requirements
         console.log('Deleting warranty requirements...')
@@ -318,7 +640,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.WarrantyRequirement.delete({ id: req.id })
             totalDeleted++
         }
-        console.log(`Deleted ${requirements.data.length} warranty requirements`)
 
         // 6. Delete Asset Warranties (junction table)
         console.log('Deleting asset warranties...')
@@ -327,7 +648,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.AssetWarranty.delete({ id: aw.id })
             totalDeleted++
         }
-        console.log(`Deleted ${assetWarranties.data.length} asset warranties`)
 
         // 7. Delete Warranties
         console.log('Deleting warranties...')
@@ -336,7 +656,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.Warranty.delete({ id: warranty.id })
             totalDeleted++
         }
-        console.log(`Deleted ${warranties.data.length} warranties`)
 
         // 8. Delete Asset Contracts (junction table)
         console.log('Deleting asset contracts...')
@@ -345,7 +664,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.AssetContract.delete({ id: ac.id })
             totalDeleted++
         }
-        console.log(`Deleted ${assetContracts.data.length} asset contracts`)
 
         // 9. Delete Service Contracts
         console.log('Deleting service contracts...')
@@ -354,7 +672,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.ServiceContract.delete({ id: contract.id })
             totalDeleted++
         }
-        console.log(`Deleted ${contracts.data.length} service contracts`)
 
         // 10. Delete Contract Requirements
         console.log('Deleting contract requirements...')
@@ -363,7 +680,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.ContractRequirement.delete({ id: req.id })
             totalDeleted++
         }
-        console.log(`Deleted ${contractReqs.data.length} contract requirements`)
 
         // 11. Delete Asset Group Memberships (junction table)
         console.log('Deleting asset group memberships...')
@@ -372,7 +688,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.AssetGroupMembership.delete({ id: membership.id })
             totalDeleted++
         }
-        console.log(`Deleted ${memberships.data.length} asset group memberships`)
 
         // 12. Delete Assets
         console.log('Deleting assets...')
@@ -381,7 +696,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.Asset.delete({ id: asset.id })
             totalDeleted++
         }
-        console.log(`Deleted ${assets.data.length} assets`)
 
         // 13. Delete Asset Groups
         console.log('Deleting asset groups...')
@@ -390,7 +704,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.AssetGroup.delete({ id: group.id })
             totalDeleted++
         }
-        console.log(`Deleted ${groups.data.length} asset groups`)
 
         // 14. Delete Reminders
         console.log('Deleting reminders...')
@@ -399,7 +712,6 @@ export const deleteAllData = async (client: V6Client<Schema>) => {
             await client.models.Reminder.delete({ id: reminder.id })
             totalDeleted++
         }
-        console.log(`Deleted ${reminders.data.length} reminders`)
 
         console.log(`✅ Database cleanup complete! Deleted ${totalDeleted} total records.`)
         return { success: true, count: totalDeleted, message: `Deleted ${totalDeleted} records` }
